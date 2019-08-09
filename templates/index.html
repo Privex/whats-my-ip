@@ -1,0 +1,250 @@
+{% set ipv6_desc %}
+<p><strong>IPv6</strong> (short for IP Version 6) is the successor to IPv4 (version 4), and is slowly being rolled out across the world.</p>
+<p>An IPv6 address looks like this: <pre>2a07:e01:abcd:1234::4321</pre></p>
+<p>As of 2019, most server providers (including ourselves, <a href="https://www.privex.io" target="_BLANK">Privex</a>) include a block of IPv6 addresses
+as standard with all server purchases, and many major companies such as Google and Facebook already have their websites IPv6 ready.</p>
+<p>
+    Unfortunately for the average home user, in most countries only a small selection of home ISPs offer IPv6 connectivity, however, adoption by 
+    mobile data networks is quickly increasing - due to the <a href="https://en.wikipedia.org/wiki/IPv4_address_exhaustion" target="_BLANK">growing shortage 
+    of IPv4 addresses.</a>
+</p>
+<p>
+    If you'd like to add IPv6 support to your home network without having to switch ISPs, you can use an IPv6 tunnel such as 
+    <a href="https://tunnelbroker.net/" target="_BLANK">HE.NET TunnelBroker</a>, or a VPN provider that offers IPv6 such as
+    <a href="https://www.azirevpn.com/" target="_BLANK">AzireVPN</a>
+</p>
+<p>(<strong>DISCLAIMER:</strong> We are not affiliated with TunnelBroker nor AzireVPN, nor do we get any form 
+        of sponsorship/referral benefits for linking you to them).</p>
+{% endset %}
+
+{% set ipv4_desc %}
+<p><strong>IPv4</strong> (short for IP Version 4) is the most used IP networking protocol, and the oldest still in common use (The first major standard for 
+    IPv4 was released in 1978 - over 3 decades ago).</p>
+    <p>Practically every website on the internet supports IPv4, with a good portion of websites which support both IPv4 and IPv6 at the same time.</p>
+    <p>An IPv4 address is made up of 4 numbers between 0 and 255, separated by dots. For example: <pre>192.168.12.34</pre></p>
+    <h3>Nerd Details</h3>
+    <p>
+        IPv4 uses a 32 bit address address system, meaning each address is composed of 32 binary one's and zero's. Each number "chunk" of 0-255 is known as 
+        an <strong>Octet</strong> because 8 binary digits (0000 0000 to 1111 1111) can represent at most 256 different numbers (one of those 256 numbers 
+        is zero, thus it ranges from 0 to 255).
+    </p>
+    <h4>CIDR Subnetting</h4>
+    <p>
+        To allow for IP addresses to be organised into small blocks - forming networks, we use an organisation system known as <strong>CIDR (Classless Inter-Domain Routing).</strong>
+        CIDR allows us to break down the rather large 4.2 billion IPv4 address space into small chunks, allowing for simple routing (finding where a certain IP is located), plus helping
+        to mitigate <a href="https://en.wikipedia.org/wiki/Broadcast_radiation" target="_blank">Broadcast Storms</a>.
+    </p>
+    <p>
+        Grouping a block of IPv4 addresses together with CIDR is done by choosing the amount of "bits" you want. The standard CIDR notation looks like this:
+    </p>
+    <pre>192.168.1.0/24</pre>
+    <p>
+        The above notation means:
+    </p>
+    <ul>
+        <li>The first <strong>24 binary bits</strong> of this address (which make up 3 octets from the left: 192.168.1) are locked - they identify the "network".</li>
+        <li>Thus, if we do <strong>32 - 24</strong> this leaves us with 8 remaining bits. Those 8 bits (the last octet of the address) are the "host" bits.</li>
+        <li>As a visual example, the IP address 255.255.255.0 would be represented in binary as: <pre>11111111 11111111 11111111 00000000</pre></li>
+    </ul>
+    <p>
+        One host bit (/32) can represent one address, two host bits (/31) represent two addresses,
+        three host bits (/30) represent four addresses, and four bits (/29) represent eight addresses (doubling each time).
+    </p>
+    <p>
+        The most common block sizes are <strong>/24</strong> (32 - 24 = 8 bits = 256 addresses), <strong>/16</strong> (32 - 16 = 16 bits = 65,536 addresses), and 
+        <strong>/8</strong> (16,777,216 addresses)
+    </p>
+
+{% endset %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Your IP address and browser information | Privex</title>
+        <meta name="charset" content="utf8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="Find out your public IPv4 and/or IPv6 address, the name of your ISP, IP to location, and more!"/>
+        <meta name="og:description" content="Find out your public IPv4 and/or IPv6 address, the name of your ISP, IP to location, and more!"/>
+        <meta name="og:image" content="https://www.privex.io/static/assets/img/logo-withtext.png"/>
+        <meta name="twitter:card" content="summary_large_image"/>
+        <meta name="twitter:site" content="@PrivexInc"/>
+        <meta name="og:site_name" content="Privex"/>
+        <meta name="og:title" content="IP address and browser information | Privex"/>
+        <meta name="theme-color" content="#8963C3"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css"/>
+        
+        <style>
+            #app .mainbox {
+                padding: 3em;
+                margin: 30px 0 30px 0;
+            }
+    
+            #results_segment {
+                min-height: 400px;
+            }
+            #logo {
+                text-align: center;
+            }
+            #logo img {
+                max-height: 200px;
+            }
+            #footer {
+                text-align: center;
+                margin: 30px 0 30px 0;
+                font-weight: 600;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="ui container" id="app">
+            <!-- Start of heading box with our logo and information about this site. -->
+            <div class="ui segment mainbox">
+                <div class="ui grid">
+                    <div id="logo" class="six wide column">
+                        <img src="https://www.privex.io/static/assets/svg/brand_text_nofont.svg" alt="Privex Logo" />
+                    </div>
+                    <div class="ten wide column">
+                            <h1>Privex's IPv4 / IPv6 Information Page</h1>
+                            <p>Find out your IP address and browser information, including both your IPv4 and IPv6 address, your user agent, your location, and more!</p>
+                            <p>We are Privex Inc, a privacy focused server hosting company based in Belize. </p>
+                            <p>In the networking world, we're <a href="https://bgp.he.net/AS210083" target="_BLANK">AS210083 PRIVEX</a></p>
+                            <p>
+                                <a href="https://www.privex.io/peering" target="_BLANK">Peering with Privex</a> ///
+                                <a href="https://www.privex.io/" target="_BLANK">Our main website</a>
+                            </p>
+                    </div>
+                </div>
+            </div>
+            <!-- End of heading box -->
+
+            <!-- Start of IP information box -->
+            <div class="ui segment raised mainbox">
+                <table class="ui red celled table" id="primary-info">
+                    <thead>
+                    {% if ip_valid %}
+                        <tr><th>Your current IP:</th><td>{{ ip }}</td></tr>
+                        <tr><th>Your User Agent (web browser):</th><td>{{ ua }}</td></tr>
+                        <tr><th colspan="2">Location / ISP Information</th></tr>
+                        {% if geo.error %}
+                            <tr class="ui error" style="text-align: center"><td colspan="2"><strong>Uh oh...</strong> We couldn't get your ISP, Country or City due to the following error:</td></tr>
+                            <tr class="ui error" style="text-align: center"><td colspan="2"><strong>{{ geo.message }}</strong></td></tr>
+                        {% else %}
+                            <tr><th>Your ISP:</th><td>{{ geo.as_name }} (ASN {{ geo.as_number }})</td></tr>
+                            <tr>
+                                <th>Your Country:</th>
+                                <td><img class="flag" src="/static/flags/{{ geo.country_code.lower() }}.gif" alt="{{ geo.country }} Flag" /> {{ geo.country }}</td>
+                            </tr>
+                            <tr><th>Your City:</th><td>{{ geo.city }}</td></tr>
+                        {% endif %}
+                    {% else %}
+                        <tr><th>UH OH...</th><td>For some reason, we can't get your IP address information at the moment...</td></tr>
+                    {% endif %}
+                    </thead>
+                </table>
+
+                <table class="ui blue celled table" id="ipv4-info">
+                    <thead>
+                        <tr><th colspan="2">IPv4 Information (e.g. 127.0.0.1)</th></tr>                        
+                        <tr><th>Your IPv4 Address:</th><td id="addr-v4">Loading...</td></tr>
+                        <tr><th>Your IPv4 ISP:</th><td id="addr-v4-isp">Loading...</td></tr>
+                        <tr><th>Your IPv4 Country:</th><td id="addr-v4-country">Loading...</td></tr>
+                        <tr><th>Your IPv4 City:</th><td id="addr-v4-city">Loading...</td></tr>
+                    </thead>
+                </table>
+
+
+
+                <table class="ui green celled table" id="ipv6-info">
+                    <thead>
+                        <tr><th colspan="2">IPv6 Information (e.g. 2001:abcd::1)</th></tr>                        
+                        <tr><th>Your IPv6 Address:</th><td id="addr-v6">Loading...</td></tr>        
+                        <tr><th>Your IPv6 ISP:</th><td id="addr-v6-isp">Loading...</td></tr>
+                        <tr><th>Your IPv6 Country:</th><td id="addr-v6-country">Loading...</td></tr>
+                        <tr><th>Your IPv6 City:</th><td id="addr-v6-city">Loading...</td></tr>
+                    </thead>
+                </table>
+
+                <table class="ui green celled table" id="ipv4-info-fail" style="display: none">
+                    <thead>
+                        <tr><th colspan="2">IPv4 Information (e.g. 127.0.0.1)</th></tr>                        
+                        <tr class="ui error"><th>Error:</th><td>We couldn't load your IPv4 information, you may be one of the very few people on an IPv6-only network.</td></tr>        
+                        <tr><td colspan="2">
+                            {{ ipv4_desc }}
+                        </td></tr>
+                    </thead>
+                </table>
+
+                <table class="ui green celled table" id="ipv6-info-fail" style="display: none">
+                    <thead>
+                        <tr><th colspan="2">IPv6 Information (e.g. 2001:abcd::1)</th></tr>                        
+                        <tr class="ui error"><th>Error:</th><td>We couldn't load your IPv6 information, this is most likely simply because your ISP currently doesn't offer IPv6.</td></tr>        
+                        <tr><td colspan="2">
+                            {{ ipv6_desc }}
+                        </td></tr>
+                    </thead>
+                </table>
+
+            </div>
+            <!-- End of IP information box -->
+            <div class="ui segment raised mainbox">
+                <h2>Understanding networking, including "What is IPv4?" and "What is IPv6?"</h2>
+                <div class="ui styled fluid accordion">
+                        <div class="active title">
+                            <i class="dropdown icon"></i>
+                            What is an IP address? Why do I need/have one?
+                        </div>
+                        <div class="active content">
+                            <p>An IP address (IP being short for "Internet Protocol") most commonly refers to your <strong>public IPv4 address</strong>, and 
+                            sometimes to your <strong>IPv6 address</strong> (if you have one).</p>
+                            <p>
+                                Generally, there are two kinds of IP addresses: public, and private. Most home internet users will have ONE public IPv4 address, plus 
+                                a separate private "LAN" IPv4 address for each device on their network.
+                            </p>
+                            <p>
+                                An IP address is similar to a <strong>phone number</strong>; much like how a phone call happens between two phone numbers, computer 
+                                networking uses "connections" between two IP addresses.
+                            </p>
+                            <p>
+                                On an average home network, accessing a website results in a connection that looks like this:
+                            </p>
+                            <pre>192.168.1.123 (Laptop) &lt;--&gt; 192.168.1.1 |(Router)| 23.45.67.89 (Public IP) &lt;--&gt; 12.34.56.78 (A website on the internet)</pre>
+                            <p>
+                                The server <strong>12.34.56.78</strong> can only see the public IP (in the example, 23.45.67.89), but home routers use a technique known as 
+                                <strong>Network Address Translation (NAT)</strong> allowing network traffic coming from the internet to be routed back to the device which
+                                originally sent it (e.g. The laptop 192.168.1.123 in the example).
+                            </p>
+                        </div>
+
+                    <div class="active title">
+                        <i class="dropdown icon"></i>
+                        What is IPv4 (IP Version 4)?
+                    </div>
+                    <div class="active content">
+                        {{ ipv4_desc }}
+                    </div>
+
+                    <div class="active title">
+                        <i class="dropdown icon"></i>
+                        What is IPv6 (IP Version 6)?
+                    </div>
+                    <div class="active content">
+                        {{ ipv6_desc }}
+                    </div>
+                </div>
+            </div>
+            <!-- Footer -->
+            <div class="ui segment" id="footer">
+                &copy; 2019 Privex Inc. --- Released under the GNU AGPL v3 --- <a href="https://github.com/Privex/whats-my-ip" target="_BLANK">View source on Github</a>
+            </div>
+
+        </div>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
+        <script type="text/javascript">
+            window.v4_host = '//{{ v4_host }}/';
+            window.v6_host = '//{{ v6_host }}/';
+            $('.ui.accordion').accordion();
+        </script>
+        <script src="/static/app.js"></script>
+    </body>
+
+</html>

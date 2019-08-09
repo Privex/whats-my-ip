@@ -1,0 +1,20 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pylint = "*"
+
+[packages]
+flask = "*"
+geoip2 = "*"
+redis = "*"
+python-dotenv = "*"
+privex-loghelper = "*"
+privex-helpers = "*"
+gunicorn = "*"
+flask-cors = "*"
+
+[requires]
+python_version = "3.7"
