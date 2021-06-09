@@ -5,16 +5,23 @@ verify_ssl = true
 
 [dev-packages]
 pylint = "*"
+jupyter = "*"
 
 [packages]
-flask = "*"
-geoip2 = "*"
-redis = "*"
+flask = ">=2.0"
+geoip2 = ">=4.0"
+redis = ">=3.3"
 python-dotenv = "*"
 privex-loghelper = "*"
-privex-helpers = "*"
+#privex-helpers = ">=3.0"
 gunicorn = "*"
-flask-cors = "*"
+flask-cors = ">=3.0.8"
+rich = "*"
+accept-types = "*"
+privex-helpers = {version = ">=3.0", extras = ["full"]}
+requests = ">=2.2"
+pyyaml = "*"
+markdown = ">=3.0.1"
 
 [requires]
-python_version = "3.7"
+python_version = "3.8"

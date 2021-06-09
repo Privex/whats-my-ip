@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Your IP address and browser information{% endblock %} | Privex</title>
+    <meta name="charset" content="utf8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content="Find out your public IPv4 and/or IPv6 address, the name of your ISP, IP to location, and more!"/>
+    <meta name="og:description" content="Find out your public IPv4 and/or IPv6 address, the name of your ISP, IP to location, and more!"/>
+    <meta name="og:image" content="https://www.privex.io/static/assets/img/logo-withtext.png"/>
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:site" content="@PrivexInc"/>
+    <meta name="og:site_name" content="Privex"/>
+    <meta name="og:title" content="IP address and browser information | Privex"/>
+    <meta name="theme-color" content="#8963C3"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css"/>
+
+    <style>
+        #app .mainbox {
+            padding: 3em;
+            margin: 30px 0 30px 0;
+        }
+
+        #results_segment {
+            min-height: 400px;
+        }
+
+        #logo {
+            text-align: center;
+        }
+
+        #logo img {
+            max-height: 200px;
+        }
+
+        #footer {
+            text-align: center;
+            margin: 30px 0 30px 0;
+            font-weight: 600;
+        }
+
+        #logobrand.ui.item {
+            width: 10rem;
+            max-width: 10rem;
+            height: 5rem;
+        }
+
+        #logobrand.ui.item img {
+            width: 8rem;
+        }
+
+        code[class*="language-"] {
+            background: #333;
+            display: block;
+            padding: 2rem;
+            border-radius: 1rem;
+            color: #c5d0eae8;
+        }
+    </style>
+</head>
+<body>
+<div class="ui container" id="app">
+    <!-- Start of heading box with our logo and information about this site. -->
+    <div class="ui segment mainbox">
+        <div class="ui grid">
+            <div id="logo" class="six wide column">
+                <img src="https://www.privex.io/static/assets/svg/brand_text_nofont.svg" alt="Privex Logo"/>
+            </div>
+            <div class="ten wide column">
+                <h1>Privex's IPv4 / IPv6 Information Page</h1>
+                <p>Find out your IP address and browser information, including both your IPv4 and IPv6 address, your user agent, your location, and more!</p>
+                <p>We are Privex Inc, a privacy focused server hosting company based in Belize. </p>
+                <p>In the networking world, we're <a href="https://bgp.he.net/AS210083" target="_BLANK">AS210083 PRIVEX</a></p>
+                <p>
+                    <a href="https://www.privex.io/peering" target="_BLANK">Peering with Privex</a> ///
+                    <a href="https://www.privex.io/" target="_BLANK">Our main website</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    <!-- End of heading box -->
+
+    <div class="ui top attached menu">
+        <div id="logobrand" class="ui item">
+            <a href="/">
+                <img src="https://cdn.privex.io/privex.io/svg/privex_logo_horizontal.svg" alt="Privex Logo"/>
+            </a>
+        </div>
+
+        <div class="ui item"><a href="/">Privex IP Info</a></div>
+        <div class="ui item"><a href="/api/">API / Programmatic Usage</a></div>
+        <div class="ui item"><a href="https://github.com/Privex/whats-my-ip">Source (Github)</a></div>
+        <div class="ui item"><a href="https://www.privex.io/" target="_BLANK">Privex Official Website</a></div>
+    </div>
+
+    <!-- Start of IP information box -->
+    <div class="ui segment raised mainbox">
+        {% block content %}{% endblock %}
+    </div>
+
+<!-- Footer -->
+<div class="ui segment" id="footer">
+    &copy; 2019 Privex Inc. --- Released under the GNU AGPL v3 --- <a href="https://github.com/Privex/whats-my-ip" target="_BLANK">View source on Github</a>
+</div>
+
+</div>
+{% block default_scripts %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
+<script type="text/javascript">
+    window.v4_host = '//{{ v4_host }}/';
+    window.v6_host = '//{{ v6_host }}/';
+    $('.ui.accordion').accordion();
+</script>
+<script src="/static/app.js"></script>
+{% endblock %}
+{% block scripts %}{% endblock %}
+</body>
+
+</html>

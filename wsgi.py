@@ -3,11 +3,11 @@
 
 Copyright::
     +===================================================+
-    |                 © 2019 Privex Inc.                |
+    |                 © 2021 Privex Inc.                |
     |               https://www.privex.io               |
     +===================================================+
     |                                                   |
-    |        Flask Network Looking Glass                |
+    |        IP Address Information Tool                |
     |                                                   |
     |        Core Developer(s):                         |
     |                                                   |
@@ -16,9 +16,10 @@ Copyright::
     +===================================================+
 
 """
-from app import app, cf
+from myip import settings
+from myip.app import app
 
 application = app
 
 if __name__ == "__main__":
-    application.run(host=cf['HOST'], port=cf['PORT'], debug=cf['DEBUG'])
+    application.run(host=settings.HOST, port=settings.PORT, debug=settings.DEBUG)

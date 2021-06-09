@@ -1,3 +1,4 @@
+{% extends 'base.html' %}
 {% set ipv6_desc %}
 <p><strong>IPv6</strong> (short for IP Version 6) is the successor to IPv4 (version 4), and is slowly being rolled out across the world.</p>
 <p>An IPv6 address looks like this: <pre>2a07:e01:abcd:1234::4321</pre></p>
@@ -56,68 +57,7 @@ as standard with all server purchases, and many major companies such as Google a
     </p>
 
 {% endset %}
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Your IP address and browser information | Privex</title>
-        <meta name="charset" content="utf8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="description" content="Find out your public IPv4 and/or IPv6 address, the name of your ISP, IP to location, and more!"/>
-        <meta name="og:description" content="Find out your public IPv4 and/or IPv6 address, the name of your ISP, IP to location, and more!"/>
-        <meta name="og:image" content="https://www.privex.io/static/assets/img/logo-withtext.png"/>
-        <meta name="twitter:card" content="summary_large_image"/>
-        <meta name="twitter:site" content="@PrivexInc"/>
-        <meta name="og:site_name" content="Privex"/>
-        <meta name="og:title" content="IP address and browser information | Privex"/>
-        <meta name="theme-color" content="#8963C3"/>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css"/>
-        
-        <style>
-            #app .mainbox {
-                padding: 3em;
-                margin: 30px 0 30px 0;
-            }
-    
-            #results_segment {
-                min-height: 400px;
-            }
-            #logo {
-                text-align: center;
-            }
-            #logo img {
-                max-height: 200px;
-            }
-            #footer {
-                text-align: center;
-                margin: 30px 0 30px 0;
-                font-weight: 600;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="ui container" id="app">
-            <!-- Start of heading box with our logo and information about this site. -->
-            <div class="ui segment mainbox">
-                <div class="ui grid">
-                    <div id="logo" class="six wide column">
-                        <img src="https://www.privex.io/static/assets/svg/brand_text_nofont.svg" alt="Privex Logo" />
-                    </div>
-                    <div class="ten wide column">
-                            <h1>Privex's IPv4 / IPv6 Information Page</h1>
-                            <p>Find out your IP address and browser information, including both your IPv4 and IPv6 address, your user agent, your location, and more!</p>
-                            <p>We are Privex Inc, a privacy focused server hosting company based in Belize. </p>
-                            <p>In the networking world, we're <a href="https://bgp.he.net/AS210083" target="_BLANK">AS210083 PRIVEX</a></p>
-                            <p>
-                                <a href="https://www.privex.io/peering" target="_BLANK">Peering with Privex</a> ///
-                                <a href="https://www.privex.io/" target="_BLANK">Our main website</a>
-                            </p>
-                    </div>
-                </div>
-            </div>
-            <!-- End of heading box -->
-
-            <!-- Start of IP information box -->
-            <div class="ui segment raised mainbox">
+{% block content %}
                 <table class="ui red celled table" id="primary-info">
                     <thead>
                     {% if ip_valid %}
@@ -231,20 +171,5 @@ as standard with all server purchases, and many major companies such as Google a
                     </div>
                 </div>
             </div>
-            <!-- Footer -->
-            <div class="ui segment" id="footer">
-                &copy; 2019 Privex Inc. --- Released under the GNU AGPL v3 --- <a href="https://github.com/Privex/whats-my-ip" target="_BLANK">View source on Github</a>
-            </div>
 
-        </div>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
-        <script type="text/javascript">
-            window.v4_host = '//{{ v4_host }}/';
-            window.v6_host = '//{{ v6_host }}/';
-            $('.ui.accordion').accordion();
-        </script>
-        <script src="/static/app.js"></script>
-    </body>
-
-</html>
+{% endblock %}
