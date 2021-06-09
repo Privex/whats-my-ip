@@ -64,6 +64,8 @@ app = Flask(__name__)
 CORS(app)
 cf = app.config
 
+app.url_map.strict_slashes = False
+
 for k, v in settings.cf.items():
     cf[k] = v
 
