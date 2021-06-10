@@ -166,8 +166,8 @@ CONTENT_TYPES = dict(
     html=['htm', 'html', 'text/html', 'text/x-html', 'text/xhtml', 'text/xhtml+xml', 'application/html',
           'application/x-html', 'application/xhtml', 'application/xhtml+xml',
           'web', 'page', 'webpage'],
-    yaml=['yml', 'yaml', 'x-yml', 'x-yaml', 'text/yaml', 'text/yml', 'application/yaml', 'application/yml',
-          'text/x-yaml', 'text/x-yml', 'application/x-yaml', 'application/x-yml']
+    yaml=['yml', 'yaml', 'x-yml', 'x-yaml', 'text/yaml', 'text/vnd.yaml', 'text/yml', 'application/yaml', 'application/yml',
+          'text/x-yaml', 'text/x-yml', 'application/vnd.yaml', 'application/x-yaml', 'application/x-yml']
     
 )
 

@@ -366,10 +366,10 @@ def view_lookup(ip_addr=None, dtype=None, bformat=None):
         if len(iplist) > settings.MAX_ADDRESSES:
             ecode, emsg = "TOO_MANY_ADDRS", f"Too many addresses. You can only lookup {settings.MAX_ADDRESSES} addresses at a time."
             if not empty(dtype) or wanted == 'text':
-                return Response(f"ERROR: {emsg} (code: {ecode})", status=402, mimetype='text/plain', content_type='text/plain')
+                return Response(f"ERROR: {emsg} (code: {ecode})", status=402, content_type='text/plain')
             edict = dict(error=True, code=ecode, message=emsg)
             if wanted == 'yaml':
-                return Response(dump_yaml(edict), status=402, content_type='application/yaml')
+                return Response(dump_yaml(edict), status=402, content_type='text/yaml')
             return jsonify(edict), 402
 
         if not empty(dtype) or wanted == 'text':
@@ -378,12 +378,12 @@ def view_lookup(ip_addr=None, dtype=None, bformat=None):
             res_txt = _ln.lstrip('\n')
             for xip in iplist:
                 res_txt += get_flat(xip, ua=ua, dtype=dtype) + "\n" + _ln
-            return Response(res_txt, status=200, mimetype='text/plain', content_type='text/plain')
+            return Response(res_txt, status=200, content_type='text/plain')
         res_list = {xip: geo_view(xip, ua=ua) for xip in iplist}
 
         rdct = {k: _safe_dict(v) for k, v in res_list.items()}
         if wanted == 'yaml':
-            return Response(dump_yaml(dict(addresses=rdct)), status=200, content_type='application/yaml')
+            return Response(dump_yaml(dict(addresses=rdct)), status=200, content_type='text/yaml')
         return jsonify(rdct)
 
     ip = get_ip() if empty(ip) else ip
@@ -395,9 +395,9 @@ def view_lookup(ip_addr=None, dtype=None, bformat=None):
     if not empty(dtype) or wanted == 'text':
         dtype = empty_if(dtype, frm.get('type', frm.get('dtype', 'all')))
         fres = get_flat(ip, ua=ua, dtype=dtype) + "\n"
-        return Response(fres, status=200, mimetype='text/plain', content_type='text/plain')
+        return Response(fres, status=200, content_type='text/plain')
     if wanted == 'yaml':
-        return Response(dump_yaml(data), status=200, content_type='application/yaml')
+        return Response(dump_yaml(data), status=200, content_type='text/yaml')
     return jsonify(data)
     # if want_json():
     #     return jsonify(data)
@@ -487,9 +487,9 @@ def index(bformat=None):
         return jsonify(data)
     if wanted == 'text':
         fres = get_flat(ip, ua=ua, dtype=q.get('type', q.get('dtype', 'all')))
-        return Response(fres + "\n", status=200, mimetype='text/plain', content_type='text/plain')
+        return Response(fres + "\n", status=200, content_type='text/plain')
     if wanted == 'yaml':
-        return Response(dump_yaml(data), status=200, mimetype='application/yaml', content_type='application/yaml')
+        return Response(dump_yaml(data), status=200, content_type='text/yaml')
     return render_template('index.html', v4_host=cf['V4_HOST'], v6_host=cf['V6_HOST'], main_host=settings.MAIN_HOST, **data)
 
 
