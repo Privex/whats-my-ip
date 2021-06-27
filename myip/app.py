@@ -510,6 +510,8 @@ def tpl_add_hosts():
         v4_host = settings.V4_HOST
         v6_host = settings.V6_HOST
     else:
+        if hst.startswith(f'{settings.V4_SUBDOMAIN}.'): hst = hst.replace(f'{settings.V4_SUBDOMAIN}.', '', 1)
+        if hst.startswith(f'{settings.V6_SUBDOMAIN}.'): hst = hst.replace(f'{settings.V6_SUBDOMAIN}.', '', 1)
         v4_host, v6_host = f"{settings.V4_SUBDOMAIN}.{hst}", f"{settings.V6_SUBDOMAIN}.{hst}"
     return dict(v4_host=v4_host, v6_host=v6_host, main_host=settings.MAIN_HOST)
 
