@@ -490,7 +490,20 @@ def index(bformat=None):
         return Response(fres + "\n", status=200, content_type='text/plain')
     if wanted == 'yaml':
         return Response(dump_yaml(data), status=200, content_type='text/yaml')
-    return render_template('index.html', v4_host=cf['V4_HOST'], v6_host=cf['V6_HOST'], main_host=settings.MAIN_HOST, **data)
+    # return render_template('index.html', v4_host=cf['V4_HOST'], v6_host=cf['V6_HOST'], main_host=settings.MAIN_HOST, **data)
+    return render_template('index.html', **data)
+
+
+@app.context_processor
+def tpl_add_hosts():
+    request.trusted_hosts = settings.ALLOWED_HOSTS
+    hst = request.host
+    if settings.FORCE_MAIN_HOST:
+        v4_host = settings.V4_HOST
+        v6_host = settings.V6_HOST
+    else:
+        v4_host, v6_host = f"{settings.V4_SUBDOMAIN}.{hst}", f"{settings.V6_SUBDOMAIN}.{hst}"
+    return dict(v4_host=v4_host, v6_host=v6_host, main_host=settings.MAIN_HOST)
 
 
 if __name__ == "__main__":
