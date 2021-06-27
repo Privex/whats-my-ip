@@ -473,10 +473,7 @@ def get_flat(ip: str, ua: str = None, dtype: str = None, geodata: Union[GeoIPRes
     return str(ip)
 
 
-@app.route('/', methods=['GET', 'POST'], defaults=dict(bformat='html'))
-@app.route('/index', methods=['GET', 'POST'], defaults=dict(bformat='html'))
-@app.route('/index.<bformat>', methods=['GET', 'POST'], defaults=dict())
-def index(bformat=None):
+def _index(bformat=None):
     h = request.headers
     ip = get_ip()
     ua = h.get('User-Agent', 'Empty User Agent')
@@ -492,6 +489,17 @@ def index(bformat=None):
         return Response(dump_yaml(data), status=200, content_type='text/yaml')
     # return render_template('index.html', v4_host=cf['V4_HOST'], v6_host=cf['V6_HOST'], main_host=settings.MAIN_HOST, **data)
     return render_template('index.html', **data)
+
+
+@app.route('/', methods=['GET', 'POST'], defaults=dict(bformat='html'), strict_slashes=False)
+def index_slash(bformat=None):
+    return _index(bformat)
+
+
+@app.route('/index', methods=['GET', 'POST'], defaults=dict(bformat='html'), strict_slashes=False)
+@app.route('/index.<bformat>', methods=['GET', 'POST'], defaults=dict(), strict_slashes=False)
+def index_file(bformat=None):
+    return _index(bformat)
 
 
 @app.context_processor
