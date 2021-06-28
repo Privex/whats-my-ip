@@ -3,6 +3,152 @@ Programmatic usage of our IP Information service
 
 [TOC]
 
+## Quickstart - A mix of the most useful/popular queries
+
+```sh
+##### Get just your IPv4/v6 address
+curl -fsSL https://{{ host }}/flat
+# 2a07:e00::333
+
+##### Force cURL to use IPv4
+curl -4 -fsSL https://{{ host }}/flat
+# 185.130.44.108
+
+##### Or simply request our v4/v6-only subdomain
+curl -fsSL https://{{ v4_host }}/flat
+# 185.130.44.108
+curl -fsSL https://{{ v6_host }}/flat
+# 2a07:e00::333
+
+##### Get the GeoIP country for your IP 
+curl -fsSL https://{{ host }}/flat/country
+# Sweden
+
+##### Get your full location (city, postcode, country)
+curl -fsSL https://{{ host }}/flat/location
+# Stockholm, 173 11, Sweden
+
+##### Get your ISP's name and AS Number (ASN)
+curl -fsSL https://{{ host }}/flat/asninfo
+# Privex Inc.
+# AS210083
+
+##### Get all information about your IP in plain text greppable format
+curl -fsSL https://{{ host }}/index.txt
+curl -H 'Accept: text/plain' -fsSL https://{{ host }}/  # ALTERNATIVE
+curl -fsSL https://{{ host }}/?format=text  # ALTERNATIVE
+#IP: 2a07:e01:123::456
+#Version: ipv6
+#Hostname:
+#UserAgent: curl/7.54.0
+#Country: Sweden
+#CountryCode: SE
+#City: Stockholm
+#Postcode: 173 11
+#Lat: 59.3333
+#Long: 18.05
+#ASNum: 210083
+#ASName: Privex Inc.
+#Network: 2a07:e01::/32
+
+##### Get all information about your IP as JSON
+curl -fsSL https://{{ host }}/index.json
+curl -H 'Accept: application/json' -fsSL https://{{ host }}/  # ALTERNATIVE
+curl -fsSL https://{{ host }}/?format=json  # ALTERNATIVE
+#  {
+#    "error": false,
+#    "geo": {
+#      "as_name": "Privex Inc.",
+#      "as_number": 210083,
+#      "city": "Stockholm",
+#      "country": "Sweden",
+#      "country_code": "SE",
+#      "error": false,
+#      "ip_address": "2a07:e01:123::456",
+#      "lat": 59.3333,
+#      "long": 18.05,
+#      "network": "2a07:e01::/32",
+#      "postcode": "173 11"
+#    },
+#    "hostname": "",
+#    "ip": "2a07:e01:123::456",
+#    "ip_type": "ipv6",
+#    "ip_valid": true,
+#    "messages": [],
+#    "ua": "curl/7.54.0"
+#  }
+
+##### Get all information about your IP as YAML
+curl -fsSL https://{{ host }}/index.yml
+curl -H 'Accept: application/yaml' -fsSL https://{{ host }}/  # ALTERNATIVE
+curl -fsSL https://{{ host }}/?format=yml  # ALTERNATIVE
+#  error: false
+#  geo:
+#    as_name: Privex Inc.
+#    as_number: 210083
+#    city: Stockholm
+#    country: Sweden
+#    country_code: SE
+#    error: false
+#    ip_address: 2a07:e01:123::456
+#    lat: 59.3333
+#    long: 18.05
+#    network: 2a07:e01::/32
+#    postcode: 173 11
+#  hostname: ''
+#  ip: 2a07:e01:123::456
+#  ip_type: ipv6
+#  ip_valid: true
+#  messages: []
+#  ua: curl/7.54.0
+
+##### (JSON) Get information about any v4/v6 IP
+curl -fsSL https://{{ host }}/lookup/185.130.47.1
+#  {
+#    "error": false,
+#    "geo": {
+#      "as_name": "Privex Inc.",
+#      "as_number": 210083,
+#      "city": "Amsterdam",
+#      "country": "Netherlands",
+#      "country_code": "NL",
+#      "error": false,
+#      "ip_address": "185.130.47.1",
+#      "lat": 52.352,
+#      "long": 4.9392,
+#      "network": "185.130.44.0/22",
+#      "postcode": "1098"
+#    },
+#    "hostname": "n9k.ams.nl1.privex.cc",
+#    "ip": "185.130.47.1",
+#    "ip_type": "ipv4",
+#    "ip_valid": true,
+#    "messages": [],
+#    "ua": "curl/7.54.0"
+#  }
+
+##### (Plain Text) Get information about any v4/v6 IP
+curl -fsSL https://{{ host }}/lookup.txt/185.130.47.1
+curl -H 'Accept: text/plain' -fsSL https://{{ host }}/lookup/185.130.47.1  # ALTERNATIVE
+curl -fsSL https://{{ host }}/lookup/185.130.47.1?format=text  # ALTERNATIVE
+
+##### (YAML) Get information about any v4/v6 IP
+curl -fsSL https://{{ host }}/lookup.yml/185.130.47.1
+curl -H 'Accept: application/yaml' -fsSL https://{{ host }}/lookup/185.130.47.1  # ALTERNATIVE
+curl -fsSL https://{{ host }}/lookup/185.130.47.1?format=yml  # ALTERNATIVE
+
+##### (Single Data) Get individual pieces of info about any v4/v6 IP
+curl -fsSL https://{{ host }}/lookup/2a07:e00::333/city
+# Stockholm
+curl -fsSL https://{{ host }}/lookup/2a07:e00::333/hostname
+# se.dns.privex.io
+curl -fsSL https://{{ host }}/lookup/2a07:e00::333/coords
+# 59.3333, 18.0500
+curl -fsSL https://{{ host }}/lookup/2a07:e00::333/asninfo
+# Privex Inc.
+# AS210083
+```
+
 ## Supported output formats
 
 Some of our pages / endpoints support outputting their data in multiple formats.
@@ -14,17 +160,17 @@ You can also specify `format` as both an encoded POST form, or as JSON in the PO
 ### Example Usage for format param and Accept header
 
 ```sh
-curl https://{{ main_host }}/?format=json
-curl -H 'Accept: application/json' https://{{ main_host }}/
+curl https://{{ host }}/?format=json
+curl -H 'Accept: application/json' https://{{ host }}/
 
-curl https://{{ main_host }}/?format=yaml 
-curl -H 'Accept: application/yaml' https://{{ main_host }}/
+curl https://{{ host }}/?format=yaml 
+curl -H 'Accept: application/yaml' https://{{ host }}/
 
-curl https://{{ main_host }}/lookup/185.130.44.123?format=yaml 
-curl -H 'Accept: application/yaml' https://{{ main_host }}/lookup/185.130.44.123
+curl https://{{ host }}/lookup/185.130.44.123?format=yaml 
+curl -H 'Accept: application/yaml' https://{{ host }}/lookup/185.130.44.123
 
 # Using the HTTPie tool to send a JSON body POST request 
-http -p hbHB POST https://{{ main_host }}/lookup/ format=plain addr=185.130.44.56
+http -p hbHB POST https://{{ host }}/lookup/ format=plain addr=185.130.44.56
 ```
 
 ### HTML
@@ -154,15 +300,15 @@ You can query the main site to get information about your system's most preferre
 with (e.g. curl with `-4` or `-6`) allows specifying the IP version, then you can select an IP version using your client.
 
 ```sh
-curl https://{{ main_host }}/?format=json
+curl https://{{ host }}/?format=json
 
 # Alternative - send the header 'Accept: application/json'
-curl -H 'Accept: application/json' https://{{ main_host }}/
+curl -H 'Accept: application/json' https://{{ host }}/
 
 # Make the request using IPv4
-curl -4 https://{{ main_host }}/?format=json
+curl -4 https://{{ host }}/?format=json
 # Make the request using IPv6
-curl -6 https://{{ main_host }}/?format=json
+curl -6 https://{{ host }}/?format=json
 ```
 
 **Example Output:**
@@ -207,10 +353,10 @@ You can request plain text output from our index page using `?format=plain` - or
 prioritise `text/plain`.
 
 ```sh
-curl https://{{ main_host }}/?format=plain
+curl https://{{ host }}/?format=plain
 
 # Alternative - send the header 'Accept: text/plain'
-curl -H 'Accept: text/plain' https://{{ main_host }}/
+curl -H 'Accept: text/plain' https://{{ host }}/
 ```
 `
 Result:
@@ -265,7 +411,7 @@ Endpoints:
 Command:
 
 ```sh
-user@privex-example ~ $ http -p hbHB GET https://{{ main_host }}/lookup/
+user@privex-example ~ $ http -p hbHB GET https://{{ host }}/lookup/
 ```
 
 Result:
@@ -306,7 +452,7 @@ Content-Type: application/json
 Command:
 
 ```sh
-user@privex-example ~ $ http -p hbHB GET https://{{ main_host }}/lookup/185.130.46.70?format=yml
+user@privex-example ~ $ http -p hbHB GET https://{{ host }}/lookup/185.130.46.70?format=yml
 ```
 
 ```http
@@ -343,7 +489,7 @@ ua: HTTPie/2.0.0
 Command:
 
 ```sh
-user@privex-example ~ $  http -p hbHB POST https://{{ main_host }}/lookup.txt/ ip=185.130.44.56
+user@privex-example ~ $  http -p hbHB POST https://{{ host }}/lookup.txt/ ip=185.130.44.56
 ```
 
 ```http
@@ -418,52 +564,52 @@ JSON/YML/etc.
 ### Get just your IP address
 
 ```sh
-user@host ~ $ curl https://{{ main_host }}/flat
+user@host ~ $ curl https://{{ host }}/flat
 2a07:e01:123::456
 
-user@host ~ $ curl -4 https://{{ main_host }}/flat
+user@host ~ $ curl -4 https://{{ host }}/flat
 185.130.44.140
 ```
 
 ### Get just your User Agent
 
 ```sh
-user@host ~ $ curl https://{{ main_host }}/flat/ua
+user@host ~ $ curl https://{{ host }}/flat/ua
 curl/7.54.0
 ```
 
 ### Get just the Country (GeoIP) of your IP address
 
 ```sh
-user@host ~ $ curl https://{{ main_host }}/flat/country
+user@host ~ $ curl https://{{ host }}/flat/country
 Sweden
 ```
 
 ### Get just the City (GeoIP) of your IP address
 
 ```sh
-user@host ~ $ curl https://{{ main_host }}/flat/city
+user@host ~ $ curl https://{{ host }}/flat/city
 Stockholm
 ```
 
 ### Get your full GeoIP location, formatted like an address
 
 ```sh
-user@host ~ $ curl https://{{ main_host }}/flat/location
+user@host ~ $ curl https://{{ host }}/flat/location
 Stockholm, 173 11, Sweden
 ```
 
 ### Get your GeoIP location co-ordinates, returned as latitude, longitude
 
 ```sh
-user@host ~ $ curl https://{{ main_host }}/flat/pos
+user@host ~ $ curl https://{{ host }}/flat/pos
 59.3333, 18.0500
 ```
 
 ### Get your ISP/ASN name and their AS number, separated by a newline
 
 ```sh
-user@host ~ $ curl https://{{ main_host }}/flat/asninfo
+user@host ~ $ curl https://{{ host }}/flat/asninfo
 Privex Inc.
 AS210083
 ```

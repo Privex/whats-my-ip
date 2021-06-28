@@ -219,7 +219,8 @@ def wants_type(accepts: str = None, headers: Mapping[str, str] = None, query: Ma
     accepts: List[accept_types.AcceptableType] = accept_types.parse_header(accepts)
     query = merge_frm() if empty(query) else query
     # Manual override with ?format=json
-    fmt = query.get('format', 'html') if empty(fmt) else fmt
+    fmt = query.get('format', '') if empty(fmt) else fmt
+    log.debug(" [wants_type] headers = %s || accepts = %s || query = %s || fmt = %s", headers, accepts, query, fmt)
     for tname, tlist in CONTENT_TYPES.items():
         if fmt.lower() in tlist: return tname
     if fmt.lower() in ['json', 'application/json', 'js', 'api']: return 'json'
@@ -232,7 +233,9 @@ def wants_type(accepts: str = None, headers: Mapping[str, str] = None, query: Ma
         # If a HTML mimetype is higher than JSON, then they probably don't want JSON.
         if 'html' in mt.mime_type: return 'html'
         for tname, tlist in CONTENT_TYPES.items():
-            if mt.mime_type.lower() in tlist: return tname
+            if mt.mime_type.lower() in tlist:
+                log.debug(f" [wants_type] Found mimetype {tname} - matched {mt.mime_type.lower()} against {tlist}")
+                return tname
         # if mt.lower() == 'application/json': return True
     # If in doubt, they don't want JSON.
     return 'any'

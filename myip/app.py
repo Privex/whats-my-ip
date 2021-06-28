@@ -413,9 +413,9 @@ def view_api_docs():
     md = markdown.Markdown(extensions=[TocExtension(title='Table of Contents'), FencedCodeExtension()])
     with open(tpl, 'r') as fh:
         htres = md.convert(fh.read())
-    ctx = dict(v4_host=settings.V4_HOST, v6_host=settings.V6_HOST, main_host=settings.MAIN_HOST)
+    # ctx = dict(v4_host=settings.V4_HOST, v6_host=settings.V6_HOST, main_host=settings.MAIN_HOST)
     return render_template(
-        'mdpage.html', **ctx, content=render_template_string(htres, **ctx)
+        'mdpage.html', content=render_template_string(htres)
     )
 
 
@@ -491,12 +491,12 @@ def _index(bformat=None):
     return render_template('index.html', **data)
 
 
-@app.route('/', methods=['GET', 'POST'], defaults=dict(bformat='html'), strict_slashes=False)
+@app.route('/', methods=['GET', 'POST'], defaults=dict(bformat=None), strict_slashes=False)
 def index_slash(bformat=None):
     return _index(bformat)
 
 
-@app.route('/index', methods=['GET', 'POST'], defaults=dict(bformat='html'), strict_slashes=False)
+@app.route('/index', methods=['GET', 'POST'], defaults=dict(bformat=None), strict_slashes=False)
 @app.route('/index.<bformat>', methods=['GET', 'POST'], defaults=dict(), strict_slashes=False)
 def index_file(bformat=None):
     return _index(bformat)
@@ -504,16 +504,34 @@ def index_file(bformat=None):
 
 @app.context_processor
 def tpl_add_hosts():
-    request.trusted_hosts = settings.ALLOWED_HOSTS
-    hst = request.host
-    if settings.FORCE_MAIN_HOST:
-        v4_host = settings.V4_HOST
-        v6_host = settings.V6_HOST
+    return _tpl_add_hosts()
+
+
+def _tpl_add_hosts(host: str = None, v4_host: str = None, v6_host: str = None, **kwargs) -> dict:
+    filter_hosts = kwargs.pop('filter_hosts', settings.FILTER_HOSTS)
+    set_trusted_hosts = kwargs.pop('set_trusted_hosts', True)
+    v4_sub = kwargs.pop('v4_subdomain', settings.V4_SUBDOMAIN)
+    v6_sub = kwargs.pop('v6_subdomain', settings.V6_SUBDOMAIN)
+    main_host = kwargs.pop('main_host', settings.MAIN_HOST)
+    force_main_host = kwargs.pop('force_main_host', settings.FORCE_MAIN_HOST)
+    
+    if set_trusted_hosts:
+        request.trusted_hosts = settings.ALLOWED_HOSTS if filter_hosts else None
+    hst = request.host if empty(host) else host
+
+    if not any([empty(v4_host), empty(v6_host)]):
+        pass    # both v4 and v6_host are set, so we don't want to override them.
+    elif force_main_host:
+        # If force_main_host is true, then we shouldn't use the current requested host from ``hst``,
+        # instead we use the pre-set V4_HOST and V6_HOST from settings (unless v4/v6_host are overridden)
+        v4_host = empty_if(v4_host, settings.V4_HOST)
+        v6_host = empty_if(v6_host, settings.V6_HOST)
     else:
-        if hst.startswith(f'{settings.V4_SUBDOMAIN}.'): hst = hst.replace(f'{settings.V4_SUBDOMAIN}.', '', 1)
-        if hst.startswith(f'{settings.V6_SUBDOMAIN}.'): hst = hst.replace(f'{settings.V6_SUBDOMAIN}.', '', 1)
-        v4_host, v6_host = f"{settings.V4_SUBDOMAIN}.{hst}", f"{settings.V6_SUBDOMAIN}.{hst}"
-    return dict(v4_host=v4_host, v6_host=v6_host, main_host=settings.MAIN_HOST)
+        # If the current host is on the v4/v6 subdomain, then we need to trim the subdomain to avoid prepending a second subdomain
+        if hst.startswith(f'{v4_sub}.'): hst = hst.replace(f'{v4_sub}.', '', 1)
+        if hst.startswith(f'{v6_sub}.'): hst = hst.replace(f'{v6_sub}.', '', 1)
+        v4_host, v6_host = empty_if(v4_host, f"{v4_sub}.{hst}"), empty_if(v6_host, f"{v6_sub}.{hst}")
+    return dict(v4_host=v4_host, v6_host=v6_host, host=hst, main_host=main_host)
 
 
 if __name__ == "__main__":
