@@ -35,6 +35,13 @@ except Exception as rxe:
 
 dotenv.load_dotenv()
 
+MINUTE = 60
+HOUR = MINUTE * 60
+DAY = HOUR * 24
+WEEK = DAY * 7
+MONTH = DAY * 30
+YEAR = DAY * 365
+
 cf = DictObject()
 APP_DIR = Path(__file__).parent.expanduser().resolve()
 TEMPLATES_DIR = APP_DIR / 'templates'
@@ -95,6 +102,48 @@ When this is True, v4/v6_host in the template context will always use settings.V
 instead of reading the host from the headers.
 """
 
+CACHE_ADAPTER = env('CACHE_ADAPTER', None)
+"""
+This environment var controls which caching adapter is used to store any cached data from the app.
+
+By default, it's set to ``None`` (empty) which results in the ``auto`` behaviour - trying redis, memcached, and then memory cache,
+until one works.
+
+Choices:
+
+  * blank ``''`` / auto / automatic = All three of these options result in the variable being set to ``None``, which results in
+    the default cache adapter selection behaviour being used, which tries the following 3 cache adapters in order, until one works::
+    
+      * ``RedisCache`` - requires the ``redis`` PyPi package to be used
+      * ``MemcachedCache`` - requires the ``pylibmc`` PyPi package to be used
+      * ``MemoryCache`` - dependency free (apart from the package containing this adapter itself - ``privex-helpers``)
+
+  * ram / mem / memory / MemoryCache = In-Memory cache - stores cached data in application RAM, which is lost when app is restarted.
+  
+  * mcache / memcache / memcached / MemcachedCache = Memcached cache - stores cached data in ``memcached`` server,
+    requires ``memcached`` service to be installed and running on the server
+    
+  * redis / RedisCache / RedisAdapter = Redis cache - stores cached data in ``redis`` server, requires ``redis`` service
+    to be installed and running either on this server, or a remote one specified using ``REDIS_HOST`` / ``REDIS_PORT`` env vars.
+    
+  * sqlite / sqlite3 / sqlitedb = SQLite3 DB Cache - This is the only persistent cache which doesn't require a separate
+    server daemon to be running alongside the app. However, it can have performance issues, as it's file-based design means
+    only one thing (thread/app) can write to it at a time, while both reading/writing likely involves Python's GIL,
+    preventing asynchronous / threaded code from properly running in parallel.
+
+"""
+
+if empty(CACHE_ADAPTER, zero=True) or CACHE_ADAPTER.lower() in ['auto', 'automatic']:
+    CACHE_ADAPTER = None
+
+CACHE_ADAPTER_SET = False
+
+CACHE_ADAPTER_INIT = env_bool('CACHE_ADAPTER_INIT', True)
+"""
+When true, automatically sets and initialises the cache adapter in core.py during app init. When False,
+the cache adapter will be lazy-set/init, i.e. only setup once something calls :func:`myip.core.get_cache`
+"""
+
 
 def _gen_hosts(*domains) -> list:
     domlist = []
@@ -132,11 +181,15 @@ pvx_settings.GEOASN = GEOIP_PATH / GEOASN_NAME
 pvx_settings.GEOCITY = GEOIP_PATH / GEOCITY_NAME
 pvx_settings.GEOCOUNTRY = GEOIP_PATH / GEOCOUNTRY_NAME
 
-cf['GEOIP_CACHE_SEC'] = GEOIP_CACHE_SEC = int(env('GEOIP_CACHE_SEC', 600))
+cf['GEOIP_CACHE_SEC'] = GEOIP_CACHE_SEC = int(env('GEOIP_CACHE_SEC', 10 * MINUTE))
 """Amount of seconds to cache GeoIP data in Redis for. Default is 600 seconds (10 minutes)"""
 
-REDIS_HOST = env('REDIS_HOST', 'localhost')
-REDIS_PORT = int(env('REDIS_PORT', 6379))
+cf['RDNS_CACHE_SEC'] = RDNS_CACHE_SEC = int(env('RDNS_CACHE_SEC', 1 * HOUR))
+"""Amount of seconds to cache Reverse DNS (rDNS) lookup results. Default is 1 hour (3600 seconds)"""
+
+pvx_settings.REDIS_HOST = REDIS_HOST = env('REDIS_HOST', 'localhost')
+pvx_settings.REDIS_PORT = REDIS_PORT = int(env('REDIS_PORT', 6379))
+pvx_settings.REDIS_DB = REDIS_DB = int(env('REDIS_DB', 0))
 
 #######################################
 #

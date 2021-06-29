@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ################################################################
 #                                                              #
 #              Production runner script for:                   #

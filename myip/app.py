@@ -28,7 +28,7 @@ import markdown
 from markdown.extensions.toc import TocExtension
 from markdown.extensions.fenced_code import FencedCodeExtension
 from myip import settings
-from myip.core import GeoType, app, cf, dump_yaml, get_redis, get_ip, get_rdns, merge_frm, wants_type
+from myip.core import GeoType, app, cf, dump_yaml, get_cache, get_ip, get_rdns, merge_frm, wants_type
 from flask import Response, request, jsonify, render_template, render_template_string
 from privex.helpers import DictDataClass, DictObject, K, STRBYTES, T, V, empty, empty_if, ip_is_v4, stringify
 from privex.helpers.geoip import GeoIPResult, geolocate_ips
@@ -267,7 +267,7 @@ def get_geodata(ip, fail=False) -> Optional[GeoIPResult]:
     
     """
     ip = str(ip)
-    r, rkey = get_redis(), f'geoip:{ip}'
+    r, rkey = get_cache(), f'geoip:{ip}'
     cgdata: STRBYTES = r.get(rkey)
 
     if not empty(cgdata):

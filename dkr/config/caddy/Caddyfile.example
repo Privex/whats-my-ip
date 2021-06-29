@@ -1,0 +1,31 @@
+################################################################################
+# Example Caddyfile for Privex/whats-my-ip Caddy docker container.
+#
+# If this file is 'Caddyfile.example' then you need to copy this file
+# to 'Caddyfile' for it to actually work.
+#
+# For production, simply point your domain at your server's IPv4 and/or IPv6
+# address using an A and/or AAAA record, replace ':80' in Caddyfile with your
+# domain, e.g. myip.example.com
+# and Caddy will automatically get an SSL/TLS certificate + use HTTPS
+# for your domain, with no effort needed from you.
+#
+################################################################################
+
+:80
+{
+    root * /app/static
+    route /static/* {
+        uri strip_prefix /static
+        file_server
+    }
+    route /favicon.ico {
+        file_server
+    }
+    reverse_proxy myip:5252 {
+        header_up X-REAL-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {http.request.scheme}
+        header_up X-Forwarded-Host {host}
+    }
+}

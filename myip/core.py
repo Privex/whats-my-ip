@@ -22,14 +22,16 @@ import socket
 import sys
 import warnings
 # from pathlib import Path
+from ipaddress import IPv4Address, IPv6Address
 from typing import Any, ContextManager, Iterable, List, Mapping, Type, Union
 
 import geoip2.database
 import yaml
 from flask import Flask, Request, request
 from privex.loghelper import LogHelper
-from privex.helpers import DictDataClass, DictObject, Dictable, K, T, ip_is_v6, ip_is_v4, empty, empty_if
+from privex.helpers import CacheAdapter, DictDataClass, DictObject, Dictable, K, T, ip_is_v6, ip_is_v4, empty, empty_if, r_cache, stringify
 from privex.helpers.geoip import geoip_manager
+from privex.helpers.cache import adapter_get, adapter_set, MemoryCache
 
 import accept_types
 from myip import settings
@@ -55,7 +57,7 @@ except Exception as rxe:
     console_std = console_err = Mocker.make_mock_class('Console')
     err_print = printerr = print_err = lambda *args, file=sys.stderr, **kwargs: print(*args, file=file, **kwargs)
     std_print = printstd = print_std = print
-import redis
+
 import logging
 
 
@@ -96,11 +98,80 @@ _STORE = {}
 """This dictionary stores instances of various connection classes, such as Redis and GeoIP2"""
 
 
-def get_redis() -> redis.Redis:
-    """Initialise or obtain a Redis instance from _STORE"""
-    if 'redis' not in _STORE:
-        _STORE['redis'] = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
-    return _STORE['redis']
+def set_cache_adapter(adapter: Union[str, CacheAdapter] = None, reset=False) -> CacheAdapter:
+    if not reset and settings.CACHE_ADAPTER_SET:
+        log.debug(" [core.set_cache_adapter] CACHE_ADAPTER_SET is True + reset is False. Returning "
+                  "pre-configured adapter via adapter_get...")
+        adp = adapter_get()
+        log.debug(" [core.set_cache_adapter] Adapter is: %s", repr(adp))
+        return adp
+    
+    adapter = empty_if(adapter, settings.CACHE_ADAPTER, zero=True)
+    if empty(adapter, zero=True):
+        try:
+            # import redis
+            log.debug(" [core.set_cache_adapter] Attempting to import RedisCache")
+            from privex.helpers.cache.RedisCache import RedisCache
+            log.debug(" [core.set_cache_adapter] Successfully imported RedisCache - calling adapter_set(RedisCache())")
+            res = adapter_set(RedisCache(use_pickle=True))
+            res.set("myip:testing_cache", "test123", 120)
+            crz = res.get("myip:testing_cache", fail=True)
+            assert stringify(crz) == "test123"
+            log.info(" [core.set_cache_adapter] REDIS WORKS :) - Successfully tested Redis by setting + getting a key, "
+                     "and validating the result. Will use Redis for caching!")
+        except Exception as sce:
+            log.warning(f"Failed to import 'privex.helpers.cache.RedisCache' for cache adapter. Reason: {type(sce)} - {sce!s}")
+            log.warning("Please make sure the package 'redis' is installed to use the Redis adapter, and that "
+                        "the Redis server is actually running. Attempting to fallback to Memcached")
+            try:
+                log.debug(" [core.set_cache_adapter] Attempting to import MemcachedCache")
+                from privex.helpers.cache.MemcachedCache import MemcachedCache
+                log.debug(" [core.set_cache_adapter] Successfully imported MemcachedCache - calling adapter_set(MemcachedCache())")
+
+                res = adapter_set(MemcachedCache(use_pickle=True))
+                res.set("myip:testing_cache", "test123", 120)
+                crz = res.get("myip:testing_cache", fail=True)
+                assert stringify(crz) == "test123"
+                log.info(" [core.set_cache_adapter] MEMCACHED WORKS :) - Successfully tested Memcached by setting + getting a key, "
+                         "and validating the result. Will use Memcached for caching!")
+            except Exception as scx:
+                log.warning(f"Failed to import 'privex.helpers.cache.MemcachedCache' for cache adapter. Reason: {type(scx)} - {scx!s}")
+                log.warning("Please make sure the package 'pylibmc' is installed to use the Memcached adapter, and that "
+                            "the Memcached server is actually running. Attempting to fallback to Memory Cache")
+                log.debug(" [core.set_cache_adapter] Failed to set both redis + memcached. Falling back to "
+                          "MemoryCache - adapter_set(MemoryCache())")
+
+                res = adapter_set(MemoryCache())
+                log.info(" [core.set_cache_adapter] Going to use Memory Cache for caching.")
+    else:
+        log.debug(" [core.set_cache_adapter] Setting Cache Adapter using user specified string: %s", adapter)
+    
+        res = adapter_set(adapter)
+        log.debug(" [core.set_cache_adapter] Got cache adapter from adapter_set(%s): %s", repr(adapter), repr(res))
+
+    settings.CACHE_ADAPTER_SET = True
+    return res
+
+
+if settings.CACHE_ADAPTER_INIT:
+    set_cache_adapter()
+
+
+def get_cache(default: Union[str, CacheAdapter] = None, reset=False) -> CacheAdapter:
+    if not reset and settings.CACHE_ADAPTER_SET:
+        log.debug(" [core.get_cache] CACHE_ADAPTER_SET is True + reset is False. Returning "
+                  "pre-configured adapter via adapter_get...")
+        adp = adapter_get()
+        log.debug(" [core.get_cache] Adapter is: %s", repr(adp))
+        return adp
+    return set_cache_adapter(default, reset=reset)
+    
+
+# def get_redis() -> redis.Redis:
+#     """Initialise or obtain a Redis instance from _STORE"""
+#     if 'redis' not in _STORE:
+#         _STORE['redis'] = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
+#     return _STORE['redis']
 
 
 class GeoType(Enum):
@@ -150,12 +221,19 @@ def get_ip() -> str:
     return request.remote_addr or 'Unknown IP...'
 
 
-def get_rdns(ip):
+def get_rdns_base(ip: Union[str, IPv4Address, IPv6Address, Any], fallback: T = None, fail=False) -> Union[str, T]:
+    ip = str(stringify(ip))
     try:
         return str(socket.gethostbyaddr(ip)[0])
     except Exception as e:
         log.info('Could not resolve IP %s due to exception %s %s', ip, type(e), str(e))
-        return ""
+        if fail: raise e
+        return fallback
+
+
+@r_cache(lambda ip, fallback="", fail=False: f"myip:rdns:{ip!s}:{fail!r}", cache_time=settings.RDNS_CACHE_SEC)
+def get_rdns(ip: Union[str, IPv4Address, IPv6Address, Any], fallback: T = "", fail=False) -> Union[str, T]:
+    return get_rdns_base(ip, fallback, fail=fail)
 
 
 CONTENT_TYPES = dict(

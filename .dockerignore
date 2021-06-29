@@ -1,0 +1,10 @@
+.git/
+.idea/
+.vscode/
+.env
+logs/
+*.log
+*.swp
+
+dkr/data
+dkr/config/caddy

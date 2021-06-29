@@ -1,0 +1,57 @@
+version: '2'
+
+services:
+  myip:
+    container_name: myip
+    restart: always
+#    build: .
+    image: privex/myip
+    ports:
+      - "127.0.0.1:5252:5252"
+    volumes:
+      - "/usr/share/GeoIP:/usr/share/GeoIP"
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: redis
+      CACHE_ADAPTER: redis
+    env_file: ./.env
+
+  redis:
+    restart: always
+    image: redis:latest
+    hostname: redis
+    container_name: myip-redis
+    env_file: ./dkr/config/redis/redis.env
+    volumes:
+      - "./dkr/data/redis:/data"
+    ports:
+      # To avoid a potential conflict with a host-installed Redis,
+      # we expose the port onto the alternative loopback IP 127.0.0.2
+      - "127.0.0.2:6379:6379"
+
+############################################
+# Due to Docker networking generally using some form of NAT between clients and Docker containers,
+# it's somewhat pointless to run a webserver for this app in Docker, since it will be unable to
+# detect their IP, resulting in the app simply receiving the Docker network gateway IP, instead of
+# the actual client's IP.
+#
+# Unless your server is behind an external reverse proxy such as Cloudflare, which forwards the client's IP
+# in a header which you're able to process / pass to the application, then we strongly recommend that you run
+# a webserver/reverse proxy on the host (actual bare server), not in docker.
+#####
+#
+#  caddy:
+#    restart: always
+#    image: caddy:latest
+#    hostname: caddy
+#    container_name: myip-caddy
+#    volumes:
+#      - "./dkr/config/caddy/Caddyfile:/etc/caddy/Caddyfile"
+#      - "./dkr/data/caddy/data:/data"
+#      - "./dkr/data/caddy/config:/config"
+#    env_file: ./dkr/config/caddy/caddy.env
+#    ports:
+#      - "443:443"
+#      - "80:80"
+
