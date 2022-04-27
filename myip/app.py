@@ -311,9 +311,11 @@ class GeoResult(DictDataClass):
         v4 = None
         for af, _, _, _, sa in socket.getaddrinfo(self.ip, 80):
             if af == socket.AF_INET6:
-                v6 = sa[0]
+                if v6 is None:
+                    v6 = sa[0]
             elif af == socket.AF_INET:
-                v4 = sa[0]
+                if v4 is None:
+                    v4 = sa[0]
         if v6 is not None:
             return v6
         if v4 is not None:
