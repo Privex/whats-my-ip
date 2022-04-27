@@ -306,10 +306,24 @@ class GeoResult(DictDataClass):
     def ip_obj(self) -> Union[IPv4Address, IPv4Address]:
         return ip_address(self.ip)
     
+    def get_ip_info(self):
+        v6 = None
+        v4 = None
+        for af, _, _, _, sa in socket.getaddrinfo(self.ip, 80):
+            if af == socket.AF_INET6:
+                v6 = sa[0]
+            elif af == socket.AF_INET:
+                v4 = sa[0]
+        if v6 is not None:
+            return v6
+        if v4 is not None:
+            return v4
+        raise ValueError
+
     def init_ip(self, ip: str = None):
         self.ip = str(ip if not empty(ip) else self.ip)
         try:
-            self.ip = str(socket.gethostbyname(self.ip))
+            self.ip = self.get_ip_info()
         except Exception:
             raise ValueError
         self.ip_type = 'ipv4' if isinstance(self.ip_obj, IPv4Address) else 'ipv6'
