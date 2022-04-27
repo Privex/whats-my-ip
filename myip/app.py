@@ -20,6 +20,7 @@ Copyright::
 
 """
 import inspect
+import socket
 from dataclasses import dataclass, field
 from ipaddress import IPv4Network, IPv6Address, IPv6Network, ip_address, IPv4Address
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
@@ -307,6 +308,10 @@ class GeoResult(DictDataClass):
     
     def init_ip(self, ip: str = None):
         self.ip = str(ip if not empty(ip) else self.ip)
+        try:
+            self.ip = str(socket.gethostbyname(self.ip))
+        except Exception:
+            raise ValueError
         self.ip_type = 'ipv4' if isinstance(self.ip_obj, IPv4Address) else 'ipv6'
         self.ip_valid = True
         self.hostname = get_rdns(self.ip)
