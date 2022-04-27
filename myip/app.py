@@ -20,6 +20,7 @@ Copyright::
 
 """
 import inspect
+import socket
 from dataclasses import dataclass, field
 from ipaddress import IPv4Network, IPv6Address, IPv6Network, ip_address, IPv4Address
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
@@ -305,8 +306,28 @@ class GeoResult(DictDataClass):
     def ip_obj(self) -> Union[IPv4Address, IPv4Address]:
         return ip_address(self.ip)
     
+    def get_ip_info(self):
+        v6 = None
+        v4 = None
+        for af, _, _, _, sa in socket.getaddrinfo(self.ip, 80):
+            if af == socket.AF_INET6:
+                if v6 is None:
+                    v6 = sa[0]
+            elif af == socket.AF_INET:
+                if v4 is None:
+                    v4 = sa[0]
+        if v6 is not None:
+            return v6
+        if v4 is not None:
+            return v4
+        raise ValueError
+
     def init_ip(self, ip: str = None):
         self.ip = str(ip if not empty(ip) else self.ip)
+        try:
+            self.ip = self.get_ip_info()
+        except Exception:
+            raise ValueError
         self.ip_type = 'ipv4' if isinstance(self.ip_obj, IPv4Address) else 'ipv6'
         self.ip_valid = True
         self.hostname = get_rdns(self.ip)
@@ -325,19 +346,19 @@ def geo_view(ip: Union[str, IPv4Address, IPv4Address], ua: str = None, **extra) 
     try:
         data.init_ip(ip)
         data.ip_valid = True
-        gdata = get_geodata(ip)
+        gdata = get_geodata(data.ip)
         if gdata is None:
             raise geoip2.errors.AddressNotFoundError(f"GeoIPResult was empty!")
-        data.geo = DictObject(_safe_geo(get_geodata(ip)))
+        data.geo = DictObject(_safe_geo(get_geodata(data.ip)))
         data.geo.error = False
     except geoip2.errors.AddressNotFoundError:
-        msg = f"IP address '{ip}' not found in GeoIP database."
+        msg = f"IP address '{data.ip} ({ip})' not found in GeoIP database."
         log.info(msg)
         data.geo = DictObject(error=True, message=msg)
         data.error = True
         data.messages += [msg]
     except ValueError:
-        log.warning(f'The IP address "{ip}" was not valid... Use header: {cf["USE_IP_HEADER"]} / Header: "{cf["IP_HEADER"]}"')
+        log.warning(f'The IP address "{data.ip} ({ip})" was not valid... Use header: {cf["USE_IP_HEADER"]} / Header: "{cf["IP_HEADER"]}"')
         data.messages += ['Invalid IP address detected']
         data.ip_valid = False
     return data
