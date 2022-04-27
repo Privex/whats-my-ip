@@ -330,19 +330,19 @@ def geo_view(ip: Union[str, IPv4Address, IPv4Address], ua: str = None, **extra) 
     try:
         data.init_ip(ip)
         data.ip_valid = True
-        gdata = get_geodata(ip)
+        gdata = get_geodata(data.ip)
         if gdata is None:
             raise geoip2.errors.AddressNotFoundError(f"GeoIPResult was empty!")
-        data.geo = DictObject(_safe_geo(get_geodata(ip)))
+        data.geo = DictObject(_safe_geo(get_geodata(data.ip)))
         data.geo.error = False
     except geoip2.errors.AddressNotFoundError:
-        msg = f"IP address '{ip}' not found in GeoIP database."
+        msg = f"IP address '{data.ip} ({ip})' not found in GeoIP database."
         log.info(msg)
         data.geo = DictObject(error=True, message=msg)
         data.error = True
         data.messages += [msg]
     except ValueError:
-        log.warning(f'The IP address "{ip}" was not valid... Use header: {cf["USE_IP_HEADER"]} / Header: "{cf["IP_HEADER"]}"')
+        log.warning(f'The IP address "{data.ip} ({ip})" was not valid... Use header: {cf["USE_IP_HEADER"]} / Header: "{cf["IP_HEADER"]}"')
         data.messages += ['Invalid IP address detected']
         data.ip_valid = False
     return data
